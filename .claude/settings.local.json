@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python ames_regression_analysis.py)"
+      "Bash(python ames_regression_analysis.py)",
+      "Bash(findstr /C:\"Saved\" /C:\"ERROR\" /C:\"Error\" /C:\"Traceback\")"
     ]
   }
 }

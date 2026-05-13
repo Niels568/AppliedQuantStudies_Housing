@@ -687,6 +687,40 @@ for _, row in coef_df_sorted.head(25).iterrows():
 if len(coef_df_sorted) > 25:
     print(f"  ... ({len(coef_df_sorted) - 25} further coefficients omitted)")
 
+# -- Plot 09: Horizontal coefficient bar chart (top 20 by magnitude) --
+# Blue = positive coefficient (raises SalePrice)
+# Red  = negative coefficient (lowers SalePrice)
+top_n  = 20
+plot_df = coef_df_sorted.head(top_n).iloc[::-1]   # reverse so largest is at top
+
+colours = ["#4472C4" if c > 0 else "#C0392B" for c in plot_df["Coefficient"]]
+
+fig, ax = plt.subplots(figsize=(11, 8))
+bars = ax.barh(plot_df["Feature"], plot_df["Coefficient"],
+               color=colours, edgecolor="white", height=0.65)
+ax.axvline(0, color="black", linewidth=1.0)
+
+# Value labels at the end of each bar
+for bar, val in zip(bars, plot_df["Coefficient"]):
+    pad   = 300 if val >= 0 else -300
+    align = "left" if val >= 0 else "right"
+    ax.text(val + pad, bar.get_y() + bar.get_height() / 2,
+            f"{val:,.0f}", va="center", ha=align, fontsize=8.5)
+
+ax.set_xlabel("Coefficient value (USD)", fontsize=12)
+ax.set_title(f"{selected_name} -- Top {top_n} Coefficients by Magnitude\n"
+             "Blue = raises SalePrice  |  Red = lowers SalePrice",
+             fontsize=13, fontweight="bold")
+ax.tick_params(axis="y", labelsize=9)
+ax.tick_params(axis="x", labelsize=9)
+# Add a light grid on the x-axis only for readability
+ax.xaxis.grid(True, linestyle="--", alpha=0.4)
+ax.set_axisbelow(True)
+plt.tight_layout()
+plt.savefig("09_coefficient_plot.png", dpi=150)
+plt.close()
+print("\nSaved: 09_coefficient_plot.png")
+
 # -- Sample prediction --
 print("""
 SAMPLE PREDICTION -- 'Reasonable mid-market profile based on data medians':
@@ -792,4 +826,5 @@ Output files:
   06_model_comparison_r2.png   -- CV Adjusted R2 bar chart M0 to M5 + M5_alt
   07_summary_statistics.png    -- summary stats table (mean, std, min, max) for key variables
   08_correlation_plots.png     -- 2x2 scatter plots: SalePrice vs GrLivArea, OverallQual, YearBuilt, TotalBsmtSF
+  09_coefficient_plot.png      -- horizontal bar chart: top 20 coefficients (blue = raises price, red = lowers price)
 """)
