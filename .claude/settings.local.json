@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(python ames_regression_analysis.py)",
-      "Bash(findstr /C:\"Saved\" /C:\"ERROR\" /C:\"Error\" /C:\"Traceback\")"
+      "Bash(findstr /C:\"Saved\" /C:\"ERROR\" /C:\"Error\" /C:\"Traceback\")",
+      "Skill(anthropic-skills:humanizer)",
+      "Skill(anthropic-skills:humanizer:*)",
+      "Bash(python -c \"import sys; lines=sys.stdin.read\\(\\); start=lines.find\\('Simple OLS'\\); print\\(lines[start:start+700]\\)\")"
     ]
   }
 }

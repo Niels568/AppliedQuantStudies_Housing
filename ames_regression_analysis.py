@@ -721,6 +721,85 @@ plt.savefig("09_coefficient_plot.png", dpi=150)
 plt.close()
 print("\nSaved: 09_coefficient_plot.png")
 
+# -- Plot 10: Variables 1-12 from M5_alt (3 rows x 4 columns) --
+# Variables 1-8  (numeric)     : scatter + OLS regression line + R2 + equation
+# Variables 9-12 (categorical) : box plot per category level (median line shown)
+# This gives an honest visual for each variable type.
+num_vars = m3_num                        # 8 numeric  (variables 1-8)
+cat_vars = m3_cat                        # 4 categorical (variables 9-12)
+all_12   = num_vars + cat_vars
+
+print(f"\nPlot 10 panels -- M5_alt variables 1-12:")
+for i, v in enumerate(all_12, 1):
+    print(f"  {i:>2}. {v}")
+
+fig, axes = plt.subplots(3, 4, figsize=(22, 15))
+
+for ax, var in zip(axes.flat, all_12):
+
+    ysp_full = df_feat["SalePrice"] / 1_000
+
+    if var in num_vars:
+        # ── Numeric panel: scatter + OLS line ──────────────────────────────
+        x   = df_feat[var].dropna().values
+        idx = df_feat[var].dropna().index
+        ysp = ysp_full.loc[idx].values
+
+        b, a  = np.polyfit(x, ysp, 1)
+        r_val = np.corrcoef(x, ysp)[0, 1]
+        r2    = r_val ** 2
+
+        ax.scatter(x, ysp, alpha=0.20, color="steelblue", s=10, linewidths=0)
+        x_line = np.linspace(x.min(), x.max(), 300)
+        ax.plot(x_line, b * x_line + a, color="red", linewidth=2.0)
+
+        sign   = "+" if a >= 0 else "-"
+        eq_txt = f"y = {b:.1f}x {sign} {abs(a):.0f}\nR2 = {r2:.3f}"
+        y_range = ysp.max() - ysp.min()
+        x_range = x.max() - x.min()
+        ax.text(x.min() + 0.03 * x_range,
+                ysp.max() - 0.05 * y_range,
+                eq_txt, fontsize=8.5, color="red",
+                va="top", ha="left",
+                bbox=dict(boxstyle="round,pad=0.3", facecolor="white",
+                          edgecolor="#cccccc", alpha=0.85))
+        ax.yaxis.set_major_formatter(
+            plt.FuncFormatter(lambda val, _: f"${val:.0f}k")
+        )
+
+    else:
+        # ── Categorical panel: box plot per category level ──────────────────
+        col = df_feat[var].fillna("Missing")
+        # Order categories by median SalePrice for readability
+        order = (df_feat.assign(sp=ysp_full, cat=col)
+                 .groupby("cat")["sp"].median()
+                 .sort_values()
+                 .index.tolist())
+        groups = [ysp_full[col == lvl].values for lvl in order]
+        bp = ax.boxplot(groups, patch_artist=True, medianprops=dict(color="red", linewidth=2))
+        for patch in bp["boxes"]:
+            patch.set_facecolor("#d0e4f7")
+        ax.set_xticks(range(1, len(order) + 1))
+        ax.set_xticklabels(order, rotation=30, ha="right", fontsize=7)
+        ax.yaxis.set_major_formatter(
+            plt.FuncFormatter(lambda val, _: f"${val:.0f}k")
+        )
+
+    ax.set_xlabel(var, fontsize=10)
+    ax.set_ylabel("SalePrice ($k)", fontsize=10)
+    ax.set_title(f"SalePrice vs {var}", fontsize=11, fontweight="bold")
+    ax.tick_params(axis="y", labelsize=8)
+
+fig.suptitle(
+    "M5_alt Variables 1-12: SalePrice Relationships\n"
+    "Numeric (1-8): scatter + OLS line  |  Categorical (9-12): box plot by category",
+    fontsize=13, fontweight="bold"
+)
+plt.tight_layout()
+plt.savefig("10_simple_regressions.png", dpi=150)
+plt.close()
+print("Saved: 10_simple_regressions.png")
+
 # -- Sample prediction --
 print("""
 SAMPLE PREDICTION -- 'Reasonable mid-market profile based on data medians':
@@ -827,4 +906,5 @@ Output files:
   07_summary_statistics.png    -- summary stats table (mean, std, min, max) for key variables
   08_correlation_plots.png     -- 2x2 scatter plots: SalePrice vs GrLivArea, OverallQual, YearBuilt, TotalBsmtSF
   09_coefficient_plot.png      -- horizontal bar chart: top 20 coefficients (blue = raises price, red = lowers price)
+  10_simple_regressions.png    -- 3x4 grid: simple OLS for SalePrice vs all 11 M5_alt numeric variables
 """)
